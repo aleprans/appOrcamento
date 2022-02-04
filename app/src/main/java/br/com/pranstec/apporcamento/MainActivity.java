@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     EditText edtQtdeMaterial;
     EditText edtValMaterial;
     EditText edtPrazaoMaterial;
+    EditText edtFormPag;
     EditText edtDescritivo1;
     EditText edtDescritivo2;
     EditText edtDescritivo3;
@@ -51,18 +52,22 @@ public class MainActivity extends AppCompatActivity {
     Button btnIncMat;
     Button btnLimpMat;
     Button btnGerar;
-    String[] servicos = new String[9];
-    String[] qtdeItemServ = new String[9];
-    String[] valorItemServ = new String[9];
-    String[] materiais = new String[5];
-    String[] qtdeItemMart = new String[5];
-    String[] valorItemMart = new String[5];
-    String[] prazoMaterial = new String[5];
+    String[] servicos = new String[11];
+    String[] qtdeItemServ = new String[11];
+    String[] valorItemServ = new String[11];
+    String[] materiais = new String[11];
+    String[] qtdeItemMart = new String[11];
+    String[] valorItemMart = new String[11];
+    String[] prazoMaterial = new String[11];
 
     private static final int CREATEPDF = 1;
 
+    int linha = 0;
     int qtItem = 0;
     int qtMatrial = 0;
+    int qtTotal = 12;
+    int qtDiferenca = 0;
+    int qtSobra = 0;
 
     Locale locate = new Locale("pt", "BR");
     Calendar calendar = Calendar.getInstance();
@@ -95,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
         edtQtdeMaterial = findViewById(R.id.edtQtdeMaterial);
         edtValMaterial = findViewById(R.id.edtValMaterial);
         edtPrazaoMaterial = findViewById(R.id.edtPrazaoMaterial);
+        edtFormPag = findViewById(R.id.edtFormPag);
         edtDescritivo1 = findViewById(R.id.edtDescritivo1);
         edtDescritivo2 = findViewById(R.id.edtDescritivo2);
         edtDescritivo3 = findViewById(R.id.edtDescritivo3);
@@ -113,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         edtCliente.setText("");
         edtEquip.setText("");
         edtResponsavel.setText("");
+        edtFormPag.setText("");
         edtDescritivo1.setText("");
         edtDescritivo2.setText("");
         edtDescritivo3.setText("");
@@ -146,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
             servicos[i] = "";
         }
         qtItem = 0;
+        desabilitarServ(true);
     }
 
     public void limparArrayMateriais(View view){
@@ -154,11 +162,24 @@ public class MainActivity extends AppCompatActivity {
             materiais[i] = "";
         }
         qtMatrial = 0;
+        desabilitarMat(true);
+    }
+
+    public void desabilitarServ(boolean cond){
+        edtServDesc.setEnabled(cond);
+        edtQtdeServ.setEnabled(cond);
+        edtValorUnitario.setEnabled(cond);
+    }
+    public void desabilitarMat(boolean cond){
+        edtDescMaterial.setEnabled(cond);
+        edtQtdeMaterial.setEnabled(cond);
+        edtValMaterial.setEnabled(cond);
+        edtPrazaoMaterial.setEnabled(cond);
     }
 
     public void incluirServico(View view) {
-
-        if(qtItem < 7){
+        qtDiferenca = qtTotal - qtMatrial;
+        if(qtItem < qtDiferenca && qtItem < 11){
             servicos[qtItem] = edtServDesc.getText().toString();
             qtdeItemServ[qtItem] = formatValor(edtQtdeServ.getText().toString());
             valorItemServ[qtItem] = formatValor(edtValorUnitario.getText().toString());
@@ -166,14 +187,17 @@ public class MainActivity extends AppCompatActivity {
             String text = Integer.toString(qtItem);
             Toast.makeText(this, "Quantidade de Serviço inclusos "+text, Toast.LENGTH_SHORT).show();
             limparServicos();
+            if(qtItem == qtDiferenca - 1){
+                desabilitarServ(false);
+            }
         }else {
-            Toast.makeText(this, "Só é permitido 7 serviços!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Quantidade de serviço maxima atingida!!", Toast.LENGTH_SHORT).show();
         }
     }
 
     public void incluirMaterias(View view) {
-
-        if(qtMatrial < 5){
+        qtDiferenca = qtTotal - qtItem;
+        if(qtMatrial < qtDiferenca && qtMatrial < 11){
             materiais[qtMatrial] = edtDescMaterial.getText().toString();
             qtdeItemMart[qtMatrial] = formatValor(edtQtdeMaterial.getText().toString());
             valorItemMart[qtMatrial] = formatValor(edtValMaterial.getText().toString());
@@ -182,8 +206,11 @@ public class MainActivity extends AppCompatActivity {
             String text = Integer.toString(qtMatrial);
             Toast.makeText(this, "Quantidade de materiais inclusos "+text, Toast.LENGTH_SHORT).show();
             limparMateriais();
+            if(qtMatrial == qtDiferenca - 1){
+                desabilitarMat(false);
+            }
         }else {
-            Toast.makeText(this, "Só é permitido 5 Materiais!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Quantidade de materiais maxima atingida!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -209,6 +236,9 @@ public class MainActivity extends AppCompatActivity {
             error++;
         }
         if(edtResponsavel.getText().toString().equals("")){
+            error++;
+        }
+        if(edtFormPag.getText().toString().equals("")){
             error++;
         }
         if(edtDescritivo1.getText().toString().equals("") && edtDescritivo2.getText().toString().equals("") &&
@@ -341,24 +371,25 @@ public class MainActivity extends AppCompatActivity {
 
                     linesServices = linesServices + 40;
                 }
+                qtSobra = ((qtTotal - (qtItem + qtMatrial)) / 2) * 40;
+                linha = linesServices + 25 + qtSobra;
                 String valorFormatadoServ = NumberFormat.getCurrencyInstance().format(tGeralServ);
-                canvas.drawText(valorFormatadoServ, 1045, 680, texto18bold);
-                canvas.drawText("Total",950, 680, texto18bold);
+                canvas.drawText(valorFormatadoServ, 1045, linha, texto18bold);
+                canvas.drawText("Total",950, linha, texto18bold);
 
+                canvas.drawRect(50, linha + 20, 1190, linha + 60, cinzaclaro);
+                canvas.drawText("MATERIAIS", 55, linha + 45, texto18);
 
-                canvas.drawRect(50, 700, 1190, 740, cinzaclaro);
-                canvas.drawText("MATERIAIS", 55, 725, texto18);
+                canvas.drawLine(50, linha + 70, 1190, linha + 70, preto);
+                canvas.drawText("Item",80, linha + 87, texto16);
+                canvas.drawText("Descrição",300, linha + 87, texto16);
+                canvas.drawText("QTD",580, linha + 87, texto16);
+                canvas.drawText("Valor Un",700, linha + 87, texto16);
+                canvas.drawText("Valor Total",850, linha + 87, texto16);
+                canvas.drawText("Prazo de Entrega",1050, linha + 87, texto16);
+                canvas.drawLine(50, linha + 104, 1190, linha + 104, preto);
 
-                canvas.drawLine(50, 750, 1190, 750, preto);
-                canvas.drawText("Item",80, 767, texto16);
-                canvas.drawText("Descrição",300, 767, texto16);
-                canvas.drawText("QTD",580, 767, texto16);
-                canvas.drawText("Valor Un",700, 767, texto16);
-                canvas.drawText("Valor Total",850, 767, texto16);
-                canvas.drawText("Prazo de Entrega",1050, 767, texto16);
-                canvas.drawLine(50, 784, 1190, 784, preto);
-
-                int linesMaterials = 784;
+                int linesMaterials = linha + 104;
                 Double tGeralMat = 0.0;
                 for(int i = 0; i < qtMatrial; i++) {
                     Double totalMat = parseDouble(qtdeItemMart[i]) * parseDouble(valorItemMart[i]);
@@ -399,10 +430,10 @@ public class MainActivity extends AppCompatActivity {
                 canvas.drawText(valorFormatado, 1045, 1165, texto20bold);
 
                 canvas.drawRect(50, 1190, 1190, 1230, cinzaclaro);
-                canvas.drawText("FORMA DE PAGAMENTO VALOR DO SERVIÇO POR PIX OU DEPOSITO BANCARIO", 55, 1215, texto18);
+                canvas.drawText("FORMA DE PAGAMENTO : "+edtFormPag.getText().toString(), 55, 1215, texto18);
 
-                canvas.drawText("DADOS BANCÁRIOS: BANCO SANTANDER 033 | AG. 0103 | C.C 13003982-4", 55, 1250, texto16);
-                canvas.drawText("CNPJ 41.060.490/0001-07 CHAVE PIX | OCEANICA MOTORES E EQUIPAMENTOS MARITIMOS", 55, 1270, texto16);
+                canvas.drawText("DADOS BANCÁRIOS: BANCO ITAU | AG. 2931 | C.C 99722-1", 55, 1250, texto16);
+                canvas.drawText("CEL: 12982740859 CHAVE PIX | OCEANICA MOTORES", 55, 1270, texto16);
 
                 canvas.drawRect(50, 1280, 1190, 1320, cinzaclaro);
                 canvas.drawText("PRAZO DE ENTREGA", 55, 1308, texto18);
